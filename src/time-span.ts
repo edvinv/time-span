@@ -5,50 +5,69 @@ var millisecond = 1,
 	day = 24 * hour,
 	week = 7 * day;
 
-export class Duration {
-	//#region fields
-	private _ms: number;
-	static zero = new Duration(0);
-	//#endregion
+export class TimeSpan {
 
-	constructor(duration?: Duration);
-	constructor(duration?: string);
-	constructor(duration?: number);
-	constructor(duration?: any) {
-		if (duration instanceof Duration) {
-			duration = (<Duration>duration)._ms;
-		}
-		switch (typeof duration) {
-			case "number":
-				this._ms = duration;
-				break;
-			case "string":
-				this._ms = Duration.parse(<string>duration)._ms;
-				break;
-			case "undefined":
-				this._ms = 0;
-				break;
-			default:
-				this._ms = 0;
-				break;
-		}
+	private _ms: number;
+	static zero = new TimeSpan(0);
+
+	constructor(value?: number|string|TimeSpan) {
+		this.set(value);
 	}
 
 	//#region properties
+	set(value?: number|string|TimeSpan){
+		var d = TimeSpan.parse(value);
+		this._ms = d.totalMilliseconds;
+	}
+	
 	get milliseconds(): number {
 		return Math.floor(Math.abs(this._ms) % 1000);
 	}
+	set milliseconds(value: number) {
+		if (value < 0 || value >= 1000) {
+			throw new Error("TimeSpan: Invalide parameter for set milliseconds.");
+		}
+		this._ms = this._ms + (value - this.milliseconds);
+	}
+	
 	get seconds(): number {
 		return Math.floor((Math.abs(this._ms) / second) % 60);
 	}
+	set seconds(value: number) {
+		if (value < 0 || value >= 60) {
+			throw new Error("TimeSpan: Invalide parameter for set seconds.");
+		}
+		this._ms = this._ms - second * (value - this.seconds);
+	}
+	
 	get minutes(): number {
 		return Math.floor((Math.abs(this._ms) / minute) % 60);
 	}
+	set minutes(value: number) {
+		if (value < 0 || value >= 60) {
+			throw new Error("TimeSpan: Invalide parameter for set minutes.");
+		}
+		this._ms = this._ms - minute * (value - this.minutes);
+	}
+	
 	get hours(): number {
 		return Math.floor((Math.abs(this._ms) / hour) % 24);
 	}
+	set hours(value: number) {
+		if (value < 0 || value >= 24) {
+			throw new Error("TimeSpan: Invalide parameter for set hours.");
+		}
+		this._ms = this._ms - minute * (value - this.hours);
+	}
+	
 	get days(): number {
 		return Math.floor((Math.abs(this._ms) / day));
+	}
+	set days(value: number) {
+		if (value < 0) {
+			throw new Error("TimeSpan: Invalide parameter for set days.");
+		}
+		this._ms = this._ms - minute * (value - this.days);
 	}
 
 	get totalMilliseconds(): number {
@@ -57,96 +76,100 @@ export class Duration {
 	set totalMilliseconds(value: number) {
 		this._ms = value;
 	}
+	
 	get totalSeconds(): number {
 		return (this._ms / second);
 	}
+	set totalSeconds(value: number) {
+		this._ms = value;
+	}
+	
 	get totalMinutes(): number {
 		return (this._ms / minute);
 	}
+	set totalMinutes(value: number) {
+		this._ms = value * minute;
+	}
+	
 	get totalHours(): number {
 		return (this._ms / hour);
 	}
+	set totalHours(value: number) {
+		this._ms = value*hour;
+	}
+	
 	get totalDays(): number {
 		return (this._ms / day);
 	}
-	//#endregion
-
-	//#region rounding
-	adjustSeconds(adjustFunc: (value: number) => number): Duration {
-		this._ms = 1000 * adjustFunc(this._ms / 1000);
-		return this;
+	set totalDays(value: number) {
+		this._ms = value*day;
 	}
-	roundSeconds: () => Duration = this.adjustSeconds.bind(this, Math.round);
-	ceilSeconds: () => Duration = this.adjustSeconds.bind(this, Math.ceil);
-	floorSeconds: () => Duration = this.adjustSeconds.bind(this, Math.floor);
 	//#endregion
 
 	//#region from methods
 	/**
 	* Returns duration for d1-d2
 	*/
-	static from(days: number = 0, hours: number = 0, minutes: number = 0, seconds: number = 0, ms: number = 0, negative: boolean = false): Duration {
-		return new Duration((days * day + hours * hour + minutes * minute + seconds * second + ms * millisecond) * (negative ? -1 : 1));
+	static from(days: number = 0, hours: number = 0, minutes: number = 0, seconds: number = 0, ms: number = 0, negative: boolean = false): TimeSpan {
+		return new TimeSpan((days * day + hours * hour + minutes * minute + seconds * second + ms * millisecond) * (negative ? -1 : 1));
 	}
-	static fromDateDiff(d1: Date, d2: Date): Duration {
-		return Duration.fromMilliseconds(d1.getTime() - d2.getTime());
+	static fromDateDiff(d1: Date, d2: Date): TimeSpan {
+		return TimeSpan.fromMilliseconds(d1.getTime() - d2.getTime());
 	}
-	static fromMilliseconds(ms: number): Duration {
-		return new Duration(ms);
+	static fromMilliseconds(ms: number): TimeSpan {
+		return new TimeSpan(ms);
 	}
-	static fromSeconds(secs: number): Duration {
-		return new Duration(secs * second);
+	static fromSeconds(secs: number): TimeSpan {
+		return new TimeSpan(secs * second);
 	}
-	static fromMinutes(minutes: number): Duration {
-		return new Duration(minutes * minute);
+	static fromMinutes(minutes: number): TimeSpan {
+		return new TimeSpan(minutes * minute);
 	}
-	static fromHours(hours: number): Duration {
-		return new Duration(hours * hour);
+	static fromHours(hours: number): TimeSpan {
+		return new TimeSpan(hours * hour);
 	}
-	static fromDays(days: number): Duration {
-		return new Duration(days * day);
+	static fromDays(days: number): TimeSpan {
+		return new TimeSpan(days * day);
 	}
 	//#endregion
 
 	//#region Time operation
-	static substract(t1: Date, t2: Date): Duration {
-		return new Duration(t1.getTime() - t2.getTime());
+	static dateDiff(t1: Date, t2: Date): TimeSpan {
+		return new TimeSpan(t1.getTime() - t2.getTime());
 	}
 	//#endregion
 
 	//#region operations
-	negate(): Duration {
-		return new Duration(-this._ms);
+	negate(): TimeSpan {
+		return new TimeSpan(-this._ms);
 	}
-	add(duration: Duration): Duration {
-		return new Duration(this._ms + duration._ms);
+	add(duration: TimeSpan): TimeSpan {
+		return new TimeSpan(this._ms + duration._ms);
 	}
-	addMilliseconds(ms: number): Duration {
-		return new Duration(this._ms + ms);
+	addMilliseconds(ms: number): TimeSpan {
+		return new TimeSpan(this._ms + ms);
 	}
-	addSeconds(seconds: number): Duration {
-		return new Duration(this._ms + seconds * second);
+	addSeconds(seconds: number): TimeSpan {
+		return new TimeSpan(this._ms + seconds * second);
 	}
-	addMinutes(minutes: number): Duration {
-		return new Duration(this._ms + minutes * minute);
+	addMinutes(minutes: number): TimeSpan {
+		return new TimeSpan(this._ms + minutes * minute);
 	}
-	addHours(hours: number): Duration {
-		return new Duration(this._ms + hours * hour);
+	addHours(hours: number): TimeSpan {
+		return new TimeSpan(this._ms + hours * hour);
 	}
-	addDays(days: number): Duration {
-		return new Duration(this._ms + days * day);
+	addDays(days: number): TimeSpan {
+		return new TimeSpan(this._ms + days * day);
 	}
-	substract(duration: Duration): Duration {
+	substract(duration: TimeSpan): TimeSpan {
 		return this.add(duration.negate());
 	}
 
 	//#endregion
 
 	//#region parse
-	static parse(value: string): Duration;
-	static parse(value: number): Duration;
-	static parse(value: any): Duration {
-		var duration = Duration.tryParse(value);
+	static parse(value: number|string|TimeSpan): TimeSpan {
+		var duration = TimeSpan.tryParse(value);
 		if (!duration) {
 			throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
 		}
@@ -164,31 +187,39 @@ export class Duration {
 	* - null is returned in the case of error
 	*/
 
-	static tryParse(value: Duration): Duration;
-	static tryParse(value: string): Duration;
-	static tryParse(value: number): Duration;
-	static tryParse(value: any): Duration {
-		// if value is already duration return duration
-		if (value instanceof Duration) {
+	static tryParse(value: number|string|TimeSpan): TimeSpan {
+		// if value is undefined return yero duration
+		if (value === undefined) {
+			return TimeSpan.fromMilliseconds(0);
+		}
+		
+		// if value is already duration return same duration instance
+		if (value instanceof TimeSpan) {
 			return value;
 		}
-		// if value is number then this are milisecondsn
+
+		// if value is number then this are miliseconds
 		if (typeof value === "number") {
-			return Duration.fromMilliseconds(value);
+			return TimeSpan.fromMilliseconds(value);
 		}
 
-		// if value is string and is float number then this are miliseconds
-		var durationString = <string>value;
-		if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(durationString)) {
-			return Duration.fromMilliseconds(parseFloat(durationString));
+		if (typeof value === "string") {
+			// if value is string and is float number then this are miliseconds
+			var durationString = <string>value;
+			if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(durationString)) {
+				return TimeSpan.fromMilliseconds(parseFloat(durationString));
+			}
+
+			// otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
+			var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
+			var res = durationRegex.exec(durationString);
+			if (!res) {
+				return null;
+			}
+			return TimeSpan.from(res[3] !== undefined ? parseInt(res[3], 10) : 0, parseInt(res[5], 10), parseInt(res[6], 10), parseInt(res[7], 10), res[10] !== undefined ? parseInt(res[10], 10) : 0, res[1] === '-');
 		}
 
-		var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
-		var res = durationRegex.exec(durationString);
-		if (!res) {
-			return null;
-		}
-		return Duration.from(res[3] !== undefined ? parseInt(res[3], 10) : 0, parseInt(res[5], 10), parseInt(res[6], 10), parseInt(res[7], 10), res[10] !== undefined ? parseInt(res[10], 10) : 0, res[1] === '-');
+		return null;
 	}
 	//#endregion
 
@@ -235,23 +266,23 @@ export class Duration {
 	//#endregion
 
 	//#region comparison
-	static compare(d1: Duration, d2: Duration): number {
+	static compare(d1: TimeSpan, d2: TimeSpan): number {
 		return d1._ms === d2._ms ? 0 : (d1._ms < d2._ms ? -1 : 1);
 	}
-	static equal(d1: Duration, d2: Duration): boolean {
-		return Duration.compare(d1, d2) === 0;
+	static equal(d1: TimeSpan, d2: TimeSpan): boolean {
+		return TimeSpan.compare(d1, d2) === 0;
 	}
-	static less(d1: Duration, d2: Duration): boolean {
-		return Duration.compare(d1, d2) < 0;
+	static less(d1: TimeSpan, d2: TimeSpan): boolean {
+		return TimeSpan.compare(d1, d2) < 0;
 	}
-	static lessOrEqual(d1: Duration, d2: Duration): boolean {
-		return Duration.compare(d1, d2) <= 0;
+	static lessOrEqual(d1: TimeSpan, d2: TimeSpan): boolean {
+		return TimeSpan.compare(d1, d2) <= 0;
 	}
-	static more(d1: Duration, d2: Duration): boolean {
-		return Duration.compare(d1, d2) > 0;
+	static more(d1: TimeSpan, d2: TimeSpan): boolean {
+		return TimeSpan.compare(d1, d2) > 0;
 	}
-	static moreOrEqual(d1: Duration, d2: Duration): boolean {
-		return Duration.compare(d1, d2) >= 0;
+	static moreOrEqual(d1: TimeSpan, d2: TimeSpan): boolean {
+		return TimeSpan.compare(d1, d2) >= 0;
 	}
 
 	get isZero(): boolean {
@@ -263,23 +294,23 @@ export class Duration {
 	get isNegative(): boolean {
 		return this._ms < 0;
 	}
-	compare(d: Duration): number {
-		return Duration.compare(this, d);
+	compare(d: TimeSpan): number {
+		return TimeSpan.compare(this, d);
 	}
-	equalTo(d: Duration): boolean {
-		return Duration.equal(this, d);
+	equalTo(d: TimeSpan): boolean {
+		return TimeSpan.equal(this, d);
 	}
-	lessThen(d: Duration): boolean {
-		return Duration.less(this, d);
+	lessThen(d: TimeSpan): boolean {
+		return TimeSpan.less(this, d);
 	}
-	lessOrEqualThen(d: Duration): boolean {
-		return Duration.lessOrEqual(this, d);
+	lessOrEqualThen(d: TimeSpan): boolean {
+		return TimeSpan.lessOrEqual(this, d);
 	}
-	moreThen(d: Duration): boolean {
-		return Duration.more(this, d);
+	moreThen(d: TimeSpan): boolean {
+		return TimeSpan.more(this, d);
 	}
-	moreOrEqualThen(d: Duration): boolean {
-		return Duration.moreOrEqual(this, d);
+	moreOrEqualThen(d: TimeSpan): boolean {
+		return TimeSpan.moreOrEqual(this, d);
 	}
 
 	//#endregion
