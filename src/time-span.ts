@@ -5,21 +5,23 @@ var millisecond = 1,
 	day = 24 * hour,
 	week = 7 * day;
 
-export class TimeSpan {
+class TimeSpan {
 
-	private _ms: number;
+	private _ms: number = 0;
 	static zero = new TimeSpan(0);
 
 	constructor(value?: number|string|TimeSpan) {
-		this.set(value);
+		if (value !== undefined) {
+			this.set(value);
+		}
 	}
 
 	//#region properties
-	set(value?: number|string|TimeSpan){
+	set(value?: number|string|TimeSpan) {
 		var d = TimeSpan.parse(value);
 		this._ms = d.totalMilliseconds;
 	}
-	
+
 	get milliseconds(): number {
 		return Math.floor(Math.abs(this._ms) % 1000);
 	}
@@ -29,7 +31,7 @@ export class TimeSpan {
 		}
 		this._ms = this._ms + (value - this.milliseconds);
 	}
-	
+
 	get seconds(): number {
 		return Math.floor((Math.abs(this._ms) / second) % 60);
 	}
@@ -39,7 +41,7 @@ export class TimeSpan {
 		}
 		this._ms = this._ms - second * (value - this.seconds);
 	}
-	
+
 	get minutes(): number {
 		return Math.floor((Math.abs(this._ms) / minute) % 60);
 	}
@@ -49,7 +51,7 @@ export class TimeSpan {
 		}
 		this._ms = this._ms - minute * (value - this.minutes);
 	}
-	
+
 	get hours(): number {
 		return Math.floor((Math.abs(this._ms) / hour) % 24);
 	}
@@ -59,7 +61,7 @@ export class TimeSpan {
 		}
 		this._ms = this._ms - minute * (value - this.hours);
 	}
-	
+
 	get days(): number {
 		return Math.floor((Math.abs(this._ms) / day));
 	}
@@ -76,33 +78,33 @@ export class TimeSpan {
 	set totalMilliseconds(value: number) {
 		this._ms = value;
 	}
-	
+
 	get totalSeconds(): number {
 		return (this._ms / second);
 	}
 	set totalSeconds(value: number) {
-		this._ms = value;
+		this._ms = value * second;
 	}
-	
+
 	get totalMinutes(): number {
 		return (this._ms / minute);
 	}
 	set totalMinutes(value: number) {
 		this._ms = value * minute;
 	}
-	
+
 	get totalHours(): number {
 		return (this._ms / hour);
 	}
 	set totalHours(value: number) {
-		this._ms = value*hour;
+		this._ms = value * hour;
 	}
-	
+
 	get totalDays(): number {
 		return (this._ms / day);
 	}
 	set totalDays(value: number) {
-		this._ms = value*day;
+		this._ms = value * day;
 	}
 	//#endregion
 
@@ -117,7 +119,9 @@ export class TimeSpan {
 		return TimeSpan.fromMilliseconds(d1.getTime() - d2.getTime());
 	}
 	static fromMilliseconds(ms: number): TimeSpan {
-		return new TimeSpan(ms);
+		var ts = new TimeSpan();
+		ts.totalMilliseconds = ms;
+		return ts;
 	}
 	static fromSeconds(secs: number): TimeSpan {
 		return new TimeSpan(secs * second);
@@ -130,12 +134,6 @@ export class TimeSpan {
 	}
 	static fromDays(days: number): TimeSpan {
 		return new TimeSpan(days * day);
-	}
-	//#endregion
-
-	//#region Time operation
-	static dateDiff(t1: Date, t2: Date): TimeSpan {
-		return new TimeSpan(t1.getTime() - t2.getTime());
 	}
 	//#endregion
 
@@ -178,7 +176,8 @@ export class TimeSpan {
 
 	/**
 	* value is in following format:
-	* 	 - if value Duration the just return value
+	* 	 - if value is undefined or null, return zero duration 
+	* 	 - if value is instance of Duration, return value
 	* 	 - if value is number, value is treated as milliseconds
 	* 	 - if value is string representation of number (float) then is treated as milliseconds
 	* 	 
@@ -188,8 +187,8 @@ export class TimeSpan {
 	*/
 
 	static tryParse(value: number|string|TimeSpan): TimeSpan {
-		// if value is undefined return yero duration
-		if (value === undefined) {
+		// if value is undefined or null return zero duration
+		if (value == null) {
 			return TimeSpan.fromMilliseconds(0);
 		}
 		
@@ -205,20 +204,19 @@ export class TimeSpan {
 
 		if (typeof value === "string") {
 			// if value is string and is float number then this are miliseconds
-			var durationString = <string>value;
-			if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(durationString)) {
-				return TimeSpan.fromMilliseconds(parseFloat(durationString));
+			var parsedValue = parseFloat(value);
+			if (!isNaN(parsedValue) && parsedValue == <any>value) {
+				return TimeSpan.fromMilliseconds(parseFloat(value));
 			}
 
 			// otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
 			var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
-			var res = durationRegex.exec(durationString);
+			var res = durationRegex.exec(value);
 			if (!res) {
 				return null;
 			}
 			return TimeSpan.from(res[3] !== undefined ? parseInt(res[3], 10) : 0, parseInt(res[5], 10), parseInt(res[6], 10), parseInt(res[7], 10), res[10] !== undefined ? parseInt(res[10], 10) : 0, res[1] === '-');
 		}
-
 		return null;
 	}
 	//#endregion
@@ -316,3 +314,4 @@ export class TimeSpan {
 	//#endregion
 }
 
+export =TimeSpan;

@@ -1,7 +1,10 @@
 var millisecond = 1, second = 1000 * millisecond, minute = 60 * second, hour = 60 * minute, day = 24 * hour, week = 7 * day;
 var TimeSpan = (function () {
     function TimeSpan(value) {
-        this.set(value);
+        this._ms = 0;
+        if (value !== undefined) {
+            this.set(value);
+        }
     }
     //#region properties
     TimeSpan.prototype.set = function (value) {
@@ -88,7 +91,7 @@ var TimeSpan = (function () {
             return (this._ms / second);
         },
         set: function (value) {
-            this._ms = value;
+            this._ms = value * second;
         },
         enumerable: true,
         configurable: true
@@ -141,7 +144,9 @@ var TimeSpan = (function () {
         return TimeSpan.fromMilliseconds(d1.getTime() - d2.getTime());
     };
     TimeSpan.fromMilliseconds = function (ms) {
-        return new TimeSpan(ms);
+        var ts = new TimeSpan();
+        ts.totalMilliseconds = ms;
+        return ts;
     };
     TimeSpan.fromSeconds = function (secs) {
         return new TimeSpan(secs * second);
@@ -154,11 +159,6 @@ var TimeSpan = (function () {
     };
     TimeSpan.fromDays = function (days) {
         return new TimeSpan(days * day);
-    };
-    //#endregion
-    //#region Time operation
-    TimeSpan.dateDiff = function (t1, t2) {
-        return new TimeSpan(t1.getTime() - t2.getTime());
     };
     //#endregion
     //#region operations
@@ -197,7 +197,8 @@ var TimeSpan = (function () {
     };
     /**
     * value is in following format:
-    * 	 - if value Duration the just return value
+    * 	 - if value is undefined or null, return zero duration
+    * 	 - if value is instance of Duration, return value
     * 	 - if value is number, value is treated as milliseconds
     * 	 - if value is string representation of number (float) then is treated as milliseconds
     *
@@ -206,8 +207,8 @@ var TimeSpan = (function () {
     * - null is returned in the case of error
     */
     TimeSpan.tryParse = function (value) {
-        // if value is undefined return yero duration
-        if (value === undefined) {
+        // if value is undefined or null return zero duration
+        if (value == null) {
             return TimeSpan.fromMilliseconds(0);
         }
         // if value is already duration return same duration instance
@@ -220,13 +221,13 @@ var TimeSpan = (function () {
         }
         if (typeof value === "string") {
             // if value is string and is float number then this are miliseconds
-            var durationString = value;
-            if (/^(\-|\+)?([0-9]+(\.[0-9]+)?)$/.test(durationString)) {
-                return TimeSpan.fromMilliseconds(parseFloat(durationString));
+            var parsedValue = parseFloat(value);
+            if (!isNaN(parsedValue) && parsedValue == value) {
+                return TimeSpan.fromMilliseconds(parseFloat(value));
             }
             // otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
             var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
-            var res = durationRegex.exec(durationString);
+            var res = durationRegex.exec(value);
             if (!res) {
                 return null;
             }
@@ -331,5 +332,5 @@ var TimeSpan = (function () {
     TimeSpan.zero = new TimeSpan(0);
     return TimeSpan;
 })();
-exports.TimeSpan = TimeSpan;
+module.exports = TimeSpan;
 //# sourceMappingURL=time-span.js.map
