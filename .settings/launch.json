@@ -9,7 +9,7 @@
 			// Type of configuration. Possible values: "node", "mono".
 			"type": "node",
 			// Workspace relative or absolute path to the program.
-			"program": "./src/time-span.js",
+			"program": "./src/time-span.ts",
 			// Automatically stop program after launch.
 			"stopOnEntry": true,
 			// Command line arguments passed to the program.
@@ -23,7 +23,7 @@
 			// Environment variables passed to the program.
 			"env": { },
 			// Use JavaScript source maps (if they exist).
-			"sourceMaps": false
+			"sourceMaps": true
 		}, 
 		{
 			"name": "Attach",
@@ -32,7 +32,7 @@
 			"address": "localhost",
 			// Port to attach to.
 			"port": 5858,
-			"sourceMaps": false
+			"sourceMaps": true
 		}
 	]
 }
