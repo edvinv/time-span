@@ -10,6 +10,10 @@ class TimeSpan {
 	private _ms: number = 0;
 	static zero = new TimeSpan(0);
 
+	/**
+	 * Creates new TimeSpan instance
+	 * @param value same as tryParse function 
+	 */
 	constructor(value?: number|string|TimeSpan) {
 		if (value !== undefined) {
 			this.set(value);
@@ -17,98 +21,103 @@ class TimeSpan {
 	}
 
 	//#region properties
-	set(value?: number|string|TimeSpan) {
-		var d = TimeSpan.parse(value);
-		this._ms = d.totalMilliseconds;
+	/**
+	 * Changes current TimeSpan instance 
+	 * @param value same as tryParse function 
+	 */
+	set(value?: number|string|TimeSpan): TimeSpan {
+		var ms = TimeSpan.parseToMs(value);
+		this.totalMilliseconds = ms;
+		return this;
 	}
 
 	get milliseconds(): number {
-		return Math.floor(Math.abs(this._ms) % 1000);
+		return Math.abs(this.totalMilliseconds) % 1000;
 	}
 	set milliseconds(value: number) {
-		if (value < 0 || value >= 1000) {
+		if (value < 0 || value >= 1000 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set milliseconds.");
 		}
-		this._ms = this._ms + (value - this.milliseconds);
+		this.totalMilliseconds += (value - this.milliseconds) * (this.isNegative ? -1 : 1);
 	}
 
 	get seconds(): number {
-		return Math.floor((Math.abs(this._ms) / second) % 60);
+		return Math.floor((Math.abs(this.totalMilliseconds) / second) % 60);
 	}
 	set seconds(value: number) {
-		if (value < 0 || value >= 60) {
+		if (value < 0 || value >= 60 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set seconds.");
 		}
-		this._ms = this._ms - second * (value - this.seconds);
+		this.totalMilliseconds += second * (value - this.seconds)* (this.isNegative ? -1 : 1);
 	}
 
 	get minutes(): number {
-		return Math.floor((Math.abs(this._ms) / minute) % 60);
+		return Math.floor((Math.abs(this.totalMilliseconds) / minute) % 60);
 	}
 	set minutes(value: number) {
-		if (value < 0 || value >= 60) {
+		if (value < 0 || value >= 60 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set minutes.");
 		}
-		this._ms = this._ms - minute * (value - this.minutes);
+		this.totalMilliseconds += minute * (value - this.minutes)* (this.isNegative ? -1 : 1);;
 	}
 
 	get hours(): number {
-		return Math.floor((Math.abs(this._ms) / hour) % 24);
+		return Math.floor((Math.abs(this.totalMilliseconds) / hour) % 24);
 	}
 	set hours(value: number) {
-		if (value < 0 || value >= 24) {
+		if (value < 0 || value >= 24 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set hours.");
 		}
-		this._ms = this._ms - minute * (value - this.hours);
+		this.totalMilliseconds += hour * (value - this.hours)* (this.isNegative ? -1 : 1);;
 	}
 
 	get days(): number {
-		return Math.floor((Math.abs(this._ms) / day));
+		return Math.floor((Math.abs(this.totalMilliseconds) / day));
 	}
 	set days(value: number) {
-		if (value < 0) {
+		if (value < 0 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set days.");
 		}
-		this._ms = this._ms - minute * (value - this.days);
+		this.totalMilliseconds += day * (value - this.days)* (this.isNegative ? -1 : 1);;
 	}
 
 	get totalMilliseconds(): number {
 		return this._ms;
 	}
 	set totalMilliseconds(value: number) {
-		this._ms = value;
+		this._ms = Math.round(value);
 	}
 
 	get totalSeconds(): number {
-		return (this._ms / second);
+		return (this.totalMilliseconds / second);
 	}
 	set totalSeconds(value: number) {
-		this._ms = value * second;
+		this.totalMilliseconds = value * second;
 	}
 
 	get totalMinutes(): number {
-		return (this._ms / minute);
+		return (this.totalMilliseconds / minute);
 	}
 	set totalMinutes(value: number) {
-		this._ms = value * minute;
+		this.totalMilliseconds = value * minute;
 	}
 
 	get totalHours(): number {
-		return (this._ms / hour);
+		return (this.totalMilliseconds / hour);
 	}
 	set totalHours(value: number) {
-		this._ms = value * hour;
+		this.totalMilliseconds = value * hour;
 	}
 
 	get totalDays(): number {
-		return (this._ms / day);
+		return (this.totalMilliseconds / day);
 	}
 	set totalDays(value: number) {
-		this._ms = value * day;
+		this.totalMilliseconds = value * day;
 	}
 	//#endregion
 
-	//#region from methods
+	//#region TimeSpan instantiation methods
 	/**
 	* Returns duration for d1-d2
 	*/
@@ -139,25 +148,25 @@ class TimeSpan {
 
 	//#region operations
 	negate(): TimeSpan {
-		return new TimeSpan(-this._ms);
+		return new TimeSpan(-this.totalMilliseconds);
 	}
 	add(duration: TimeSpan): TimeSpan {
-		return new TimeSpan(this._ms + duration._ms);
+		return new TimeSpan(this.totalMilliseconds + duration.totalMilliseconds);
 	}
 	addMilliseconds(ms: number): TimeSpan {
-		return new TimeSpan(this._ms + ms);
+		return new TimeSpan(this.totalMilliseconds + ms);
 	}
 	addSeconds(seconds: number): TimeSpan {
-		return new TimeSpan(this._ms + seconds * second);
+		return new TimeSpan(this.totalMilliseconds + seconds * second);
 	}
 	addMinutes(minutes: number): TimeSpan {
-		return new TimeSpan(this._ms + minutes * minute);
+		return new TimeSpan(this.totalMilliseconds + minutes * minute);
 	}
 	addHours(hours: number): TimeSpan {
-		return new TimeSpan(this._ms + hours * hour);
+		return new TimeSpan(this.totalMilliseconds + hours * hour);
 	}
 	addDays(days: number): TimeSpan {
-		return new TimeSpan(this._ms + days * day);
+		return new TimeSpan(this.totalMilliseconds + days * day);
 	}
 	substract(duration: TimeSpan): TimeSpan {
 		return this.add(duration.negate());
@@ -166,62 +175,91 @@ class TimeSpan {
 	//#endregion
 
 	//#region parse
+	/**
+		* Parse value and return new TimeSpan instance or throws error if value is invalid.
+		* @param value same as tryParse function 
+		*/
 	static parse(value: number|string|TimeSpan): TimeSpan {
-		var duration = TimeSpan.tryParse(value);
-		if (!duration) {
+		var ts = TimeSpan.tryParse(value);
+		if (!ts) {
 			throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
 		}
-		return duration;
+		return ts;
 	}
 
 	/**
-	* value is in following format:
+		* Parse value and return total number of miliseconds or throws error if value is invalid.
+		* @param value same as tryParse function 
+		*/
+	static parseToMs(value: number|string|TimeSpan): number {
+		var ms = TimeSpan.tryParseToMs(value);
+		if (ms === null) {
+			throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
+		}
+		return ms;
+	}
+
+	/**
+	* Parse value and return new TimeSpan instance or null if value is invalid.
+	* @param value
 	* 	 - if value is undefined or null, return zero duration 
-	* 	 - if value is instance of Duration, return value
+	* 	 - if value is instance of Duration return new TimeSpan instance with same duration
 	* 	 - if value is number, value is treated as milliseconds
 	* 	 - if value is string representation of number (float) then is treated as milliseconds
-	* 	 
-	*	otherwise following pattern is used: 
-	*		[+-][days.]hh:mm:ss[.milliseconds]
-	* - null is returned in the case of error
+	* 	 - otherwise following pattern is used:	[+-][days.][hh:]mm:ss[.milliseconds]
 	*/
-
 	static tryParse(value: number|string|TimeSpan): TimeSpan {
+		var ms = TimeSpan.tryParseToMs(value);
+		return ms === null ? null : new TimeSpan(ms);
+	}
+	
+	/**
+		* Parse value and return total number of miliseconds or null is value is invalid
+		* @param value same as tryParse function 
+		*/
+		static tryParseToMs(value: number|string|TimeSpan): number {
 		// if value is undefined or null return zero duration
 		if (value == null) {
-			return TimeSpan.fromMilliseconds(0);
+			return 0;
 		}
 		
-		// if value is already duration return same duration instance
+		// if value is already TimeSpan instance return new TimeSpan instance
 		if (value instanceof TimeSpan) {
-			return value;
+			return value.totalMilliseconds;
 		}
 
 		// if value is number then this are miliseconds
 		if (typeof value === "number") {
-			return TimeSpan.fromMilliseconds(value);
+			return value;
 		}
 
 		if (typeof value === "string") {
 			// if value is string and is float number then this are miliseconds
 			var parsedValue = parseFloat(value);
 			if (!isNaN(parsedValue) && parsedValue == <any>value) {
-				return TimeSpan.fromMilliseconds(parseFloat(value));
+				return parseFloat(value);
 			}
 
 			// otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
-			var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
+			var durationRegex = /^([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?$/g;
 			var res = durationRegex.exec(value);
 			if (!res) {
 				return null;
 			}
-			return TimeSpan.from(res[3] !== undefined ? parseInt(res[3], 10) : 0, parseInt(res[5], 10), parseInt(res[6], 10), parseInt(res[7], 10), res[10] !== undefined ? parseInt(res[10], 10) : 0, res[1] === '-');
+
+			return (
+				(res[3] !== undefined ? day * parseInt(res[3], 10) : 0) +
+				(res[6] !== undefined ? hour * parseInt(res[6], 10) : 0) +
+				minute * parseInt(res[7], 10) +
+				second * parseInt(res[8], 10) +
+				(res[11] !== undefined ? parseInt(res[11], 10) : 0)
+				) * (res[1] === '-' ? -1 : 1);
 		}
 		return null;
 	}
 	//#endregion
 
-	//#region format
+	//#region formating
 	/**
 		 * format string specification:
 		 * HH hours with leading 0
@@ -265,7 +303,7 @@ class TimeSpan {
 
 	//#region comparison
 	static compare(d1: TimeSpan, d2: TimeSpan): number {
-		return d1._ms === d2._ms ? 0 : (d1._ms < d2._ms ? -1 : 1);
+		return d1.totalMilliseconds === d2.totalMilliseconds ? 0 : (d1.totalMilliseconds < d2.totalMilliseconds ? -1 : 1);
 	}
 	static equal(d1: TimeSpan, d2: TimeSpan): boolean {
 		return TimeSpan.compare(d1, d2) === 0;
@@ -284,13 +322,13 @@ class TimeSpan {
 	}
 
 	get isZero(): boolean {
-		return this._ms === 0;
+		return this.totalMilliseconds === 0;
 	}
 	get isPositive(): boolean {
-		return this._ms > 0;
+		return this.totalMilliseconds > 0;
 	}
 	get isNegative(): boolean {
-		return this._ms < 0;
+		return this.totalMilliseconds < 0;
 	}
 	compare(d: TimeSpan): number {
 		return TimeSpan.compare(this, d);

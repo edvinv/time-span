@@ -1,5 +1,9 @@
 var millisecond = 1, second = 1000 * millisecond, minute = 60 * second, hour = 60 * minute, day = 24 * hour, week = 7 * day;
 var TimeSpan = (function () {
+    /**
+     * Creates new TimeSpan instance
+     * @param value same as tryParse function
+     */
     function TimeSpan(value) {
         this._ms = 0;
         if (value !== undefined) {
@@ -7,71 +11,79 @@ var TimeSpan = (function () {
         }
     }
     //#region properties
+    /**
+     * Changes current TimeSpan instance
+     * @param value same as tryParse function
+     */
     TimeSpan.prototype.set = function (value) {
-        var d = TimeSpan.parse(value);
-        this._ms = d.totalMilliseconds;
+        var ms = TimeSpan.parseToMs(value);
+        this.totalMilliseconds = ms;
+        return this;
     };
     Object.defineProperty(TimeSpan.prototype, "milliseconds", {
         get: function () {
-            return Math.floor(Math.abs(this._ms) % 1000);
+            return Math.abs(this.totalMilliseconds) % 1000;
         },
         set: function (value) {
-            if (value < 0 || value >= 1000) {
+            if (value < 0 || value >= 1000 || Math.round(value) !== value) {
                 throw new Error("TimeSpan: Invalide parameter for set milliseconds.");
             }
-            this._ms = this._ms + (value - this.milliseconds);
+            this.totalMilliseconds += (value - this.milliseconds) * (this.isNegative ? -1 : 1);
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "seconds", {
         get: function () {
-            return Math.floor((Math.abs(this._ms) / second) % 60);
+            return Math.floor((Math.abs(this.totalMilliseconds) / second) % 60);
         },
         set: function (value) {
-            if (value < 0 || value >= 60) {
+            if (value < 0 || value >= 60 || Math.round(value) !== value) {
                 throw new Error("TimeSpan: Invalide parameter for set seconds.");
             }
-            this._ms = this._ms - second * (value - this.seconds);
+            this.totalMilliseconds += second * (value - this.seconds) * (this.isNegative ? -1 : 1);
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "minutes", {
         get: function () {
-            return Math.floor((Math.abs(this._ms) / minute) % 60);
+            return Math.floor((Math.abs(this.totalMilliseconds) / minute) % 60);
         },
         set: function (value) {
-            if (value < 0 || value >= 60) {
+            if (value < 0 || value >= 60 || Math.round(value) !== value) {
                 throw new Error("TimeSpan: Invalide parameter for set minutes.");
             }
-            this._ms = this._ms - minute * (value - this.minutes);
+            this.totalMilliseconds += minute * (value - this.minutes) * (this.isNegative ? -1 : 1);
+            ;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "hours", {
         get: function () {
-            return Math.floor((Math.abs(this._ms) / hour) % 24);
+            return Math.floor((Math.abs(this.totalMilliseconds) / hour) % 24);
         },
         set: function (value) {
-            if (value < 0 || value >= 24) {
+            if (value < 0 || value >= 24 || Math.round(value) !== value) {
                 throw new Error("TimeSpan: Invalide parameter for set hours.");
             }
-            this._ms = this._ms - minute * (value - this.hours);
+            this.totalMilliseconds += hour * (value - this.hours) * (this.isNegative ? -1 : 1);
+            ;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "days", {
         get: function () {
-            return Math.floor((Math.abs(this._ms) / day));
+            return Math.floor((Math.abs(this.totalMilliseconds) / day));
         },
         set: function (value) {
-            if (value < 0) {
+            if (value < 0 || Math.round(value) !== value) {
                 throw new Error("TimeSpan: Invalide parameter for set days.");
             }
-            this._ms = this._ms - minute * (value - this.days);
+            this.totalMilliseconds += day * (value - this.days) * (this.isNegative ? -1 : 1);
+            ;
         },
         enumerable: true,
         configurable: true
@@ -81,53 +93,53 @@ var TimeSpan = (function () {
             return this._ms;
         },
         set: function (value) {
-            this._ms = value;
+            this._ms = Math.round(value);
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "totalSeconds", {
         get: function () {
-            return (this._ms / second);
+            return (this.totalMilliseconds / second);
         },
         set: function (value) {
-            this._ms = value * second;
+            this.totalMilliseconds = value * second;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "totalMinutes", {
         get: function () {
-            return (this._ms / minute);
+            return (this.totalMilliseconds / minute);
         },
         set: function (value) {
-            this._ms = value * minute;
+            this.totalMilliseconds = value * minute;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "totalHours", {
         get: function () {
-            return (this._ms / hour);
+            return (this.totalMilliseconds / hour);
         },
         set: function (value) {
-            this._ms = value * hour;
+            this.totalMilliseconds = value * hour;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "totalDays", {
         get: function () {
-            return (this._ms / day);
+            return (this.totalMilliseconds / day);
         },
         set: function (value) {
-            this._ms = value * day;
+            this.totalMilliseconds = value * day;
         },
         enumerable: true,
         configurable: true
     });
     //#endregion
-    //#region from methods
+    //#region TimeSpan instantiation methods
     /**
     * Returns duration for d1-d2
     */
@@ -163,75 +175,100 @@ var TimeSpan = (function () {
     //#endregion
     //#region operations
     TimeSpan.prototype.negate = function () {
-        return new TimeSpan(-this._ms);
+        return new TimeSpan(-this.totalMilliseconds);
     };
     TimeSpan.prototype.add = function (duration) {
-        return new TimeSpan(this._ms + duration._ms);
+        return new TimeSpan(this.totalMilliseconds + duration.totalMilliseconds);
     };
     TimeSpan.prototype.addMilliseconds = function (ms) {
-        return new TimeSpan(this._ms + ms);
+        return new TimeSpan(this.totalMilliseconds + ms);
     };
     TimeSpan.prototype.addSeconds = function (seconds) {
-        return new TimeSpan(this._ms + seconds * second);
+        return new TimeSpan(this.totalMilliseconds + seconds * second);
     };
     TimeSpan.prototype.addMinutes = function (minutes) {
-        return new TimeSpan(this._ms + minutes * minute);
+        return new TimeSpan(this.totalMilliseconds + minutes * minute);
     };
     TimeSpan.prototype.addHours = function (hours) {
-        return new TimeSpan(this._ms + hours * hour);
+        return new TimeSpan(this.totalMilliseconds + hours * hour);
     };
     TimeSpan.prototype.addDays = function (days) {
-        return new TimeSpan(this._ms + days * day);
+        return new TimeSpan(this.totalMilliseconds + days * day);
     };
     TimeSpan.prototype.substract = function (duration) {
         return this.add(duration.negate());
     };
     //#endregion
     //#region parse
+    /**
+        * Parse value and return new TimeSpan instance or throws error if value is invalid.
+        * @param value same as tryParse function
+        */
     TimeSpan.parse = function (value) {
-        var duration = TimeSpan.tryParse(value);
-        if (!duration) {
+        var ts = TimeSpan.tryParse(value);
+        if (!ts) {
             throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
         }
-        return duration;
+        return ts;
     };
     /**
-    * value is in following format:
+        * Parse value and return total number of miliseconds or throws error if value is invalid.
+        * @param value same as tryParse function
+        */
+    TimeSpan.parseToMs = function (value) {
+        var ms = TimeSpan.tryParseToMs(value);
+        if (ms === null) {
+            throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
+        }
+        return ms;
+    };
+    /**
+    * Parse value and return new TimeSpan instance or null if value is invalid.
+    * @param value
     * 	 - if value is undefined or null, return zero duration
-    * 	 - if value is instance of Duration, return value
+    * 	 - if value is instance of Duration return new TimeSpan instance with same duration
     * 	 - if value is number, value is treated as milliseconds
     * 	 - if value is string representation of number (float) then is treated as milliseconds
-    *
-    *	otherwise following pattern is used:
-    *		[+-][days.]hh:mm:ss[.milliseconds]
-    * - null is returned in the case of error
+    * 	 - otherwise following pattern is used:	[+-][days.][hh:]mm:ss[.milliseconds]
     */
     TimeSpan.tryParse = function (value) {
+        var ms = TimeSpan.tryParseToMs(value);
+        return ms === null ? null : new TimeSpan(ms);
+    };
+    /**
+        * Parse value and return total number of miliseconds or null is value is invalid
+        * @param value same as tryParse function
+        */
+    TimeSpan.tryParseToMs = function (value) {
         // if value is undefined or null return zero duration
         if (value == null) {
-            return TimeSpan.fromMilliseconds(0);
+            return 0;
         }
-        // if value is already duration return same duration instance
+        // if value is already TimeSpan instance return new TimeSpan instance
         if (value instanceof TimeSpan) {
-            return value;
+            return value.totalMilliseconds;
         }
         // if value is number then this are miliseconds
         if (typeof value === "number") {
-            return TimeSpan.fromMilliseconds(value);
+            return value;
         }
         if (typeof value === "string") {
             // if value is string and is float number then this are miliseconds
             var parsedValue = parseFloat(value);
             if (!isNaN(parsedValue) && parsedValue == value) {
-                return TimeSpan.fromMilliseconds(parseFloat(value));
+                return parseFloat(value);
             }
             // otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
-            var durationRegex = /^([\-\+])?((\d+)(\.))?([01]?\d|2[0123]):([012345]?\d):([012345]?\d)((\.)(\d+))?$/g;
+            var durationRegex = /^([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?$/g;
             var res = durationRegex.exec(value);
             if (!res) {
                 return null;
             }
-            return TimeSpan.from(res[3] !== undefined ? parseInt(res[3], 10) : 0, parseInt(res[5], 10), parseInt(res[6], 10), parseInt(res[7], 10), res[10] !== undefined ? parseInt(res[10], 10) : 0, res[1] === '-');
+            return ((res[3] !== undefined ? day * parseInt(res[3], 10) : 0) +
+                (res[6] !== undefined ? hour * parseInt(res[6], 10) : 0) +
+                minute * parseInt(res[7], 10) +
+                second * parseInt(res[8], 10) +
+                (res[11] !== undefined ? parseInt(res[11], 10) : 0)) * (res[1] === '-' ? -1 : 1);
         }
         return null;
     };
@@ -273,7 +310,7 @@ var TimeSpan = (function () {
     //#endregion
     //#region comparison
     TimeSpan.compare = function (d1, d2) {
-        return d1._ms === d2._ms ? 0 : (d1._ms < d2._ms ? -1 : 1);
+        return d1.totalMilliseconds === d2.totalMilliseconds ? 0 : (d1.totalMilliseconds < d2.totalMilliseconds ? -1 : 1);
     };
     TimeSpan.equal = function (d1, d2) {
         return TimeSpan.compare(d1, d2) === 0;
@@ -292,21 +329,21 @@ var TimeSpan = (function () {
     };
     Object.defineProperty(TimeSpan.prototype, "isZero", {
         get: function () {
-            return this._ms === 0;
+            return this.totalMilliseconds === 0;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "isPositive", {
         get: function () {
-            return this._ms > 0;
+            return this.totalMilliseconds > 0;
         },
         enumerable: true,
         configurable: true
     });
     Object.defineProperty(TimeSpan.prototype, "isNegative", {
         get: function () {
-            return this._ms < 0;
+            return this.totalMilliseconds < 0;
         },
         enumerable: true,
         configurable: true
