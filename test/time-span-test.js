@@ -240,4 +240,21 @@ describe("TimeSpan comparison", function () {
         expect(TimeSpan.fromMilliseconds(-1).isNegative).to.be.true;
     });
 });
+describe("TimeSpan formatting", function () {
+    it("with default  pattern.", function () {
+        expect(TimeSpan.from(1, 1, 1, 1, 1, false).toString()).to.be.equal("1.01:01:01.1");
+        expect(TimeSpan.from(12, 12, 12, 12, 123, false).toString()).to.be.equal("12.12:12:12.123");
+        expect(TimeSpan.from(1, 1, 1, 1, 1, true).toString()).to.be.equal("-1.01:01:01.1");
+        expect(TimeSpan.from(12, 12, 12, 12, 123, true).toString()).to.be.equal("-12.12:12:12.123");
+    });
+    it("with manadatory '+' sign.", function () {
+        expect(TimeSpan.from(1, 1, 1, 1, 1, false).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("+1.01:01:01.1");
+        expect(TimeSpan.from(12, 12, 12, 12, 123, false).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("+12.12:12:12.123");
+        expect(TimeSpan.from(12, 12, 12, 12, 123, true).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("-12.12:12:12.123");
+    });
+    it("with custom pattern.", function () {
+        expect(TimeSpan.from(1, 1, 1, 1, 1, false).toString("%+%d.%h:%m:%s.%t")).to.be.equal("+1.1:1:1.1");
+        expect(TimeSpan.from(1, 1, 1, 1, 789, false).toString("%t")).to.be.equal("789");
+    });
+});
 //# sourceMappingURL=time-span-test.js.map

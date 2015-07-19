@@ -273,19 +273,23 @@ var TimeSpan = (function () {
         return null;
     };
     //#endregion
-    //#region format
+    //#region formating
     /**
          * format string specification:
-         * HH hours with leading 0
-         * hh hours without leading 0
-         * MM hours with leading 0
-         * mm hours without leading 0
-         * SS hours with leading 0
-         * ss hours without leading 0
-         *
+         * %- sign ('-' if negative, '' if positive)
+         * %+ sign ('-' if negative, '+' if positive)
+         * %d days without leading 0
+         * %hh hours with leading 0
+         * %h hours without leading 0
+         * %mm minutes with leading 0
+         * %m minutes without leading 0
+         * %ss hours with leading 0
+         * %s hours without leading 0
+         * %t miliseconds with leading 0
+         * %tt miliseconds without leading 0
          */
     TimeSpan.prototype.toString = function (format) {
-        if (format === void 0) { format = "HH:MM:SS"; }
+        if (format === void 0) { format = "%-%d.%hh:%mm:%ss.%t"; }
         function replace(text, formatItem, value, leadingZeroCount) {
             if (text.indexOf(formatItem) >= 0) {
                 var replaceWith = value.toString();
@@ -298,13 +302,17 @@ var TimeSpan = (function () {
             }
             return text;
         }
-        var s = this.seconds, m = this.minutes, h = this.hours;
-        var text = replace(format, "HH", h, 2);
-        text = replace(text, "hh", h);
-        text = replace(text, "MM", m, 2);
-        text = replace(text, "mm", m);
-        text = replace(text, "SS", s, 2);
-        text = replace(text, "ss", s);
+        var d = this.seconds, s = this.seconds, m = this.minutes, h = this.hours, ms = this.milliseconds;
+        var text = replace(format, "%d", d);
+        text = replace(text, "%hh", h, 2);
+        text = replace(text, "%h", h);
+        text = replace(text, "%mm", m, 2);
+        text = replace(text, "%m", m);
+        text = replace(text, "%ss", s, 2);
+        text = replace(text, "%s", s);
+        text = replace(text, "%t", ms);
+        text = text.replace("%-", this.isNegative ? "-" : "");
+        text = text.replace("%+", this.isNegative ? "-" : "+");
         return text;
     };
     //#endregion

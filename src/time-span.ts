@@ -48,7 +48,7 @@ class TimeSpan {
 		if (value < 0 || value >= 60 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set seconds.");
 		}
-		this.totalMilliseconds += second * (value - this.seconds)* (this.isNegative ? -1 : 1);
+		this.totalMilliseconds += second * (value - this.seconds) * (this.isNegative ? -1 : 1);
 	}
 
 	get minutes(): number {
@@ -58,7 +58,7 @@ class TimeSpan {
 		if (value < 0 || value >= 60 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set minutes.");
 		}
-		this.totalMilliseconds += minute * (value - this.minutes)* (this.isNegative ? -1 : 1);;
+		this.totalMilliseconds += minute * (value - this.minutes) * (this.isNegative ? -1 : 1);;
 	}
 
 	get hours(): number {
@@ -68,7 +68,7 @@ class TimeSpan {
 		if (value < 0 || value >= 24 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set hours.");
 		}
-		this.totalMilliseconds += hour * (value - this.hours)* (this.isNegative ? -1 : 1);;
+		this.totalMilliseconds += hour * (value - this.hours) * (this.isNegative ? -1 : 1);;
 	}
 
 	get days(): number {
@@ -78,7 +78,7 @@ class TimeSpan {
 		if (value < 0 || Math.round(value) !== value) {
 			throw new Error("TimeSpan: Invalide parameter for set days.");
 		}
-		this.totalMilliseconds += day * (value - this.days)* (this.isNegative ? -1 : 1);;
+		this.totalMilliseconds += day * (value - this.days) * (this.isNegative ? -1 : 1);;
 	}
 
 	get totalMilliseconds(): number {
@@ -217,7 +217,7 @@ class TimeSpan {
 		* Parse value and return total number of miliseconds or null is value is invalid
 		* @param value same as tryParse function 
 		*/
-		static tryParseToMs(value: number|string|TimeSpan): number {
+	static tryParseToMs(value: number|string|TimeSpan): number {
 		// if value is undefined or null return zero duration
 		if (value == null) {
 			return 0;
@@ -262,16 +262,20 @@ class TimeSpan {
 	//#region formating
 	/**
 		 * format string specification:
-		 * HH hours with leading 0
-		 * hh hours without leading 0
-		 * MM hours with leading 0
-		 * mm hours without leading 0
-		 * SS hours with leading 0
-		 * ss hours without leading 0
-		 * 
+		 * %- sign ('-' if negative, '' if positive)
+		 * %+ sign ('-' if negative, '+' if positive)
+		 * %d days without leading 0
+		 * %hh hours with leading 0
+		 * %h hours without leading 0
+		 * %mm minutes with leading 0
+		 * %m minutes without leading 0
+		 * %ss hours with leading 0
+		 * %s hours without leading 0
+		 * %t miliseconds with leading 0
+		 * %tt miliseconds without leading 0
 		 */
 
-	toString(format: string = "HH:MM:SS"): string {
+	toString(format: string = "%-%d.%hh:%mm:%ss.%t"): string {
 		function replace(text: string, formatItem: string, value: number, leadingZeroCount?: number) {
 			if (text.indexOf(formatItem) >= 0) {
 				var replaceWith = value.toString();
@@ -285,17 +289,24 @@ class TimeSpan {
 			return text;
 		}
 
-		var s = this.seconds,
+		var d = this.seconds,
+			s = this.seconds,
 			m = this.minutes,
-			h = this.hours;
+			h = this.hours,
+			ms = this.milliseconds;
 
 
-		var text = replace(format, "HH", h, 2);
-		text = replace(text, "hh", h);
-		text = replace(text, "MM", m, 2);
-		text = replace(text, "mm", m);
-		text = replace(text, "SS", s, 2);
-		text = replace(text, "ss", s);
+		var
+			text = replace(format, "%d", d);
+		text = replace(text, "%hh", h, 2);
+		text = replace(text, "%h", h);
+		text = replace(text, "%mm", m, 2);
+		text = replace(text, "%m", m);
+		text = replace(text, "%ss", s, 2);
+		text = replace(text, "%s", s);
+		text = replace(text, "%t", ms);
+		text = text.replace("%-", this.isNegative ? "-" : "");
+		text = text.replace("%+", this.isNegative ? "-" : "+");
 
 		return text;
 	}

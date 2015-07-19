@@ -33,9 +33,9 @@ describe("TimeSpan instantiation", () => {
 	it("from Date difference.", () => {
 		var d1 = new Date(2015, 1, 1, 11, 23, 56, 44),
 			d2 = new Date(2015, 1, 1, 11, 23, 55, 23);
-		expect(TimeSpan.fromDateDiff(d1,d2).totalMilliseconds).to.be.equal(1021);
-		expect(TimeSpan.fromDateDiff(d2,d1).totalMilliseconds).to.be.equal(-1021);
-		expect(TimeSpan.fromDateDiff(d2,d2).totalMilliseconds).to.be.equal(0);
+		expect(TimeSpan.fromDateDiff(d1, d2).totalMilliseconds).to.be.equal(1021);
+		expect(TimeSpan.fromDateDiff(d2, d1).totalMilliseconds).to.be.equal(-1021);
+		expect(TimeSpan.fromDateDiff(d2, d2).totalMilliseconds).to.be.equal(0);
 	});
 });
 
@@ -185,21 +185,21 @@ describe("TimeSpan operations", () => {
 
 describe("TimeSpan comparison", () => {
 	it("like compare, equal, less etc...", () => {
-		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(0),TimeSpan.fromMilliseconds(0))).to.be.equal(0);
-		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(-4),TimeSpan.fromMilliseconds(-2))).to.be.equal(-1);
-		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(4),TimeSpan.fromMilliseconds(2))).to.be.equal(1);
-		expect(TimeSpan.equal(TimeSpan.fromMilliseconds(-42),TimeSpan.fromMilliseconds(-42))).to.be.true;
-		expect(TimeSpan.equal(TimeSpan.fromMilliseconds(-42),TimeSpan.fromMilliseconds(42))).to.be.false;
-		expect(TimeSpan.more(TimeSpan.fromMilliseconds(-42),TimeSpan.fromMilliseconds(-42))).to.be.false;
-		expect(TimeSpan.more(TimeSpan.fromMilliseconds(-41),TimeSpan.fromMilliseconds(-42))).to.be.true;
-		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(42),TimeSpan.fromMilliseconds(42))).to.be.true;
-		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(-41),TimeSpan.fromMilliseconds(-42))).to.be.true;
-		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(-43.1),TimeSpan.fromMilliseconds(-42))).to.be.false;
-		expect(TimeSpan.less(TimeSpan.fromMilliseconds(-42),TimeSpan.fromMilliseconds(-42))).to.be.false;
-		expect(TimeSpan.less(TimeSpan.fromMilliseconds(-43),TimeSpan.fromMilliseconds(-42))).to.be.true;
-		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(42),TimeSpan.fromMilliseconds(42))).to.be.true;
-		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(-45),TimeSpan.fromMilliseconds(-42))).to.be.true;
-		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(-43.1),TimeSpan.fromMilliseconds(-43))).to.be.true;
+		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(0), TimeSpan.fromMilliseconds(0))).to.be.equal(0);
+		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(-4), TimeSpan.fromMilliseconds(-2))).to.be.equal(-1);
+		expect(TimeSpan.compare(TimeSpan.fromMilliseconds(4), TimeSpan.fromMilliseconds(2))).to.be.equal(1);
+		expect(TimeSpan.equal(TimeSpan.fromMilliseconds(-42), TimeSpan.fromMilliseconds(-42))).to.be.true;
+		expect(TimeSpan.equal(TimeSpan.fromMilliseconds(-42), TimeSpan.fromMilliseconds(42))).to.be.false;
+		expect(TimeSpan.more(TimeSpan.fromMilliseconds(-42), TimeSpan.fromMilliseconds(-42))).to.be.false;
+		expect(TimeSpan.more(TimeSpan.fromMilliseconds(-41), TimeSpan.fromMilliseconds(-42))).to.be.true;
+		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(42), TimeSpan.fromMilliseconds(42))).to.be.true;
+		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(-41), TimeSpan.fromMilliseconds(-42))).to.be.true;
+		expect(TimeSpan.moreOrEqual(TimeSpan.fromMilliseconds(-43.1), TimeSpan.fromMilliseconds(-42))).to.be.false;
+		expect(TimeSpan.less(TimeSpan.fromMilliseconds(-42), TimeSpan.fromMilliseconds(-42))).to.be.false;
+		expect(TimeSpan.less(TimeSpan.fromMilliseconds(-43), TimeSpan.fromMilliseconds(-42))).to.be.true;
+		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(42), TimeSpan.fromMilliseconds(42))).to.be.true;
+		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(-45), TimeSpan.fromMilliseconds(-42))).to.be.true;
+		expect(TimeSpan.lessOrEqual(TimeSpan.fromMilliseconds(-43.1), TimeSpan.fromMilliseconds(-43))).to.be.true;
 	});
 	it("like isZero, isPositive and isNegative.", () => {
 		expect(TimeSpan.fromMilliseconds(0).isZero).to.be.true;
@@ -210,5 +210,23 @@ describe("TimeSpan comparison", () => {
 		expect(TimeSpan.fromMilliseconds(0).isNegative).not.to.be.true;
 		expect(TimeSpan.fromMilliseconds(1).isNegative).not.to.be.true;
 		expect(TimeSpan.fromMilliseconds(-1).isNegative).to.be.true;
+	});
+});
+
+describe("TimeSpan formatting", () => {
+	it("with default  pattern.", () => {
+		expect(TimeSpan.from(1,1,1,1,1,false).toString()).to.be.equal("1.01:01:01.1");
+		expect(TimeSpan.from(12,12,12,12,123,false).toString()).to.be.equal("12.12:12:12.123");
+		expect(TimeSpan.from(1,1,1,1,1,true).toString()).to.be.equal("-1.01:01:01.1");
+		expect(TimeSpan.from(12,12,12,12,123,true).toString()).to.be.equal("-12.12:12:12.123");
+	});
+	it("with manadatory '+' sign.", () => {
+		expect(TimeSpan.from(1,1,1,1,1,false).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("+1.01:01:01.1");
+		expect(TimeSpan.from(12,12,12,12,123,false).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("+12.12:12:12.123");
+		expect(TimeSpan.from(12,12,12,12,123,true).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("-12.12:12:12.123");
+	});
+	it("with custom pattern.", () => {
+		expect(TimeSpan.from(1,1,1,1,1,false).toString("%+%d.%h:%m:%s.%t")).to.be.equal("+1.1:1:1.1");
+		expect(TimeSpan.from(1,1,1,1,789,false).toString("%t")).to.be.equal("789");
 	});
 });
