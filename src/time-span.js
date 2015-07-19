@@ -228,8 +228,7 @@ var TimeSpan = (function () {
     * 	 - if value is undefined or null, return zero duration
     * 	 - if value is instance of Duration return new TimeSpan instance with same duration
     * 	 - if value is number, value is treated as milliseconds
-    * 	 - if value is string representation of number (float) then is treated as milliseconds
-    * 	 - otherwise following pattern is used:	[+-][days.][hh:]mm:ss[.milliseconds]
+    * 	 - otherwise following pattern is used:	([+-][days.][hh:]mm:ss[.milliseconds])|(totalMiliseconds)
     */
     TimeSpan.tryParse = function (value) {
         var ms = TimeSpan.tryParseToMs(value);
@@ -253,22 +252,21 @@ var TimeSpan = (function () {
             return value;
         }
         if (typeof value === "string") {
-            // if value is string and is float number then this are miliseconds
-            var parsedValue = parseFloat(value);
-            if (!isNaN(parsedValue) && parsedValue == value) {
-                return parseFloat(value);
-            }
-            // otherwise use following pattern [+-][days.]hh:mm:ss[.milliseconds]
-            var durationRegex = /^([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?$/g;
+            //var durationRegex = /^([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?$/g;
+            var durationRegex = /^((([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?)|([+-]?\d+))$/g;
             var res = durationRegex.exec(value);
             if (!res) {
                 return null;
             }
-            return ((res[3] !== undefined ? day * parseInt(res[3], 10) : 0) +
-                (res[6] !== undefined ? hour * parseInt(res[6], 10) : 0) +
-                minute * parseInt(res[7], 10) +
-                second * parseInt(res[8], 10) +
-                (res[11] !== undefined ? parseInt(res[11], 10) : 0)) * (res[1] === '-' ? -1 : 1);
+            if (res[14]) {
+                // string represent total milliseconds
+                return parseInt(res[14], 10);
+            }
+            return ((res[5] !== undefined ? day * parseInt(res[5], 10) : 0) +
+                (res[8] !== undefined ? hour * parseInt(res[8], 10) : 0) +
+                minute * parseInt(res[9], 10) +
+                second * parseInt(res[10], 10) +
+                (res[13] !== undefined ? parseInt(res[13], 10) : 0)) * (res[3] === '-' ? -1 : 1);
         }
         return null;
     };

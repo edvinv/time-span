@@ -160,19 +160,22 @@ describe("tryParse specification", function () {
         expect(TimeSpan.tryParse(-12.956).totalMilliseconds).to.be.equal(-13);
         expect(TimeSpan.tryParse(12.756).totalMilliseconds).to.be.equal(13);
     });
-    it("with integer/float string value.", function () {
+    it("with valid total milliseconds as string value.", function () {
+        expect(TimeSpan.tryParse("0").totalMilliseconds).to.be.equal(0);
+        expect(TimeSpan.tryParse("0011").totalMilliseconds).to.be.equal(11);
         expect(TimeSpan.tryParse("121").totalMilliseconds).to.be.equal(121);
-        expect(TimeSpan.tryParse(" 121  ").totalMilliseconds).to.be.equal(121);
         expect(TimeSpan.tryParse("-121").totalMilliseconds).to.be.equal(-121);
-        expect(TimeSpan.tryParse("-12.457").totalMilliseconds).to.be.equal(-12);
-        expect(TimeSpan.tryParse("12.458").totalMilliseconds).to.be.equal(12);
-        expect(TimeSpan.tryParse("  12.459  ").totalMilliseconds).to.be.equal(12);
-        expect(TimeSpan.tryParse("12.556  ").totalMilliseconds).to.be.equal(13);
-        expect(TimeSpan.tryParse("-12.557  ").totalMilliseconds).to.be.equal(-13);
-        expect(TimeSpan.tryParse("q12.256")).to.be.null;
-        expect(TimeSpan.tryParse(" 12. 12 ")).to.be.null;
+        expect(TimeSpan.tryParse("+121").totalMilliseconds).to.be.equal(121);
     });
-    it("with valid value for pattern [+-][days.]hh:mm:ss[.milliseconds].", function () {
+    it("with invalid total milliseconds as string value.", function () {
+        expect(TimeSpan.tryParse("1.121")).to.be.null;
+        expect(TimeSpan.tryParse("1a121")).to.be.null;
+        expect(TimeSpan.tryParse(" 121")).to.be.null;
+        expect(TimeSpan.tryParse("121 ")).to.be.null;
+        expect(TimeSpan.tryParse("- 121")).to.be.null;
+        expect(TimeSpan.tryParse("-+121")).to.be.null;
+    });
+    it("with valid string value for pattern [+-][days.]hh:mm:ss[.milliseconds].", function () {
         expect(TimeSpan.tryParse("34:56").totalMilliseconds).to.be.equal(TimeSpan.from(0, 0, 34, 56, 0, false).totalMilliseconds);
         expect(TimeSpan.tryParse("34:56.456").totalMilliseconds).to.be.equal(TimeSpan.from(0, 0, 34, 56, 456, false).totalMilliseconds);
         expect(TimeSpan.tryParse("1:34:56").totalMilliseconds).to.be.equal(TimeSpan.from(0, 1, 34, 56, 0, false).totalMilliseconds);
@@ -182,7 +185,7 @@ describe("tryParse specification", function () {
         expect(TimeSpan.tryParse("+01.22:56:59.999").totalMilliseconds).to.be.equal(TimeSpan.from(1, 22, 56, 59, 999, false).totalMilliseconds);
         expect(TimeSpan.tryParse("-01.22:56:59.999").totalMilliseconds).to.be.equal(TimeSpan.from(1, 22, 56, 59, 999, true).totalMilliseconds);
     });
-    it("with invalid value for pattern [+-][days.]hh:mm:ss[.milliseconds].", function () {
+    it("with invalid string value for pattern [+-][days.]hh:mm:ss[.milliseconds].", function () {
         expect(TimeSpan.tryParse("00:60")).to.be.null;
         expect(TimeSpan.tryParse("60:00")).to.be.null;
         expect(TimeSpan.tryParse("25:00:00")).to.be.null;
