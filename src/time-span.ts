@@ -232,10 +232,7 @@ class TimeSpan {
 			return value;
 		}
 
-
-
 		if (typeof value === "string") {
-			//var durationRegex = /^([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?$/g;
 			var durationRegex = /^((([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?)|([+-]?\d+))$/g;
 			var res = durationRegex.exec(value);
 			if (!res) {
