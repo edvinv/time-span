@@ -256,6 +256,28 @@ class TimeSpan {
 	//#endregion
 
 	//#region formating
+	private static leadingZeros(n: number, count: number): string {
+		var r = n.toString();
+		while (r.length < count) {
+			r = "0" + r;
+		}
+		return r;
+	}
+	private static formatters = {
+		'%': function() { return '%'; },
+		'-': function() { return this.isNegative ? "-" : ""; },
+		'+': function() { return this.isNegative ? "-" : "+"; },
+		'd': function() { return this.days.toString(); },
+		'h': function() { return this.hours.toString(); },
+		'hh': function() { return TimeSpan.leadingZeros(this.hours, 2); },
+		'm': function() { return this.minutes.toString(); },
+		'mm': function() { return TimeSpan.leadingZeros(this.minutes, 2); },
+		's': function() { return this.seconds.toString(); },
+		'ss': function() { return TimeSpan.leadingZeros(this.seconds, 2); },
+		't': function() { return this.milliseconds.toString(); },
+		'tt': function() { return TimeSpan.leadingZeros(this.milliseconds, 3); }
+	};
+	private static maxFormatterCmdLength: number = Object.keys(TimeSpan.formatters).reduce((p, c) => c.length > p ? c.length : p, 0);
 	/**
 		 * format string specification:
 		 * %- sign ('-' if negative, '' if positive)
@@ -271,41 +293,48 @@ class TimeSpan {
 		 * %tt miliseconds without leading 0
 		 */
 
-	toString(format: string = "%-%d.%hh:%mm:%ss.%t"): string {
-		function replace(text: string, formatItem: string, value: number, leadingZeroCount?: number) {
-			if (text.indexOf(formatItem) >= 0) {
-				var replaceWith = value.toString();
-				if (leadingZeroCount !== undefined) {
-					while (replaceWith.length < leadingZeroCount) {
-						replaceWith = "0" + replaceWith;
+	toString(format: string = "%-%d.%hh:%mm:%ss.%tt"): string {
+		var res = "",
+			cmd: any = null,
+			maxCmdLength = TimeSpan.maxFormatterCmdLength,
+			i: number,
+			ic: number,
+			fl = format.length,
+			curr: string = null,
+			formatter: () => string;
+
+		for (i = 0; i < fl; ++i) {
+			if (cmd) {
+				for (ic = maxCmdLength; ic > 0; --ic) {
+					cmd = format.slice(i, i + ic);
+					formatter = TimeSpan.formatters[cmd];
+					if (formatter) {
+						break;
 					}
 				}
-				text = text.replace(formatItem, replaceWith);
+				if (formatter) {
+					i += cmd.length - 1;
+					res += formatter.apply(this);
+					cmd = false;
+				} else {
+					throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+				}
+			} else {
+				curr = format[i];
+				if (curr === '%') {
+					cmd = true;
+				}
+				else {
+					res += curr;
+				}
 			}
-			return text;
 		}
-
-		var d = this.seconds,
-			s = this.seconds,
-			m = this.minutes,
-			h = this.hours,
-			ms = this.milliseconds;
-
-
-		var
-			text = replace(format, "%d", d);
-		text = replace(text, "%hh", h, 2);
-		text = replace(text, "%h", h);
-		text = replace(text, "%mm", m, 2);
-		text = replace(text, "%m", m);
-		text = replace(text, "%ss", s, 2);
-		text = replace(text, "%s", s);
-		text = replace(text, "%t", ms);
-		text = text.replace("%-", this.isNegative ? "-" : "");
-		text = text.replace("%+", this.isNegative ? "-" : "+");
-
-		return text;
+		if (cmd) {
+			throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+		}
+		return res;
 	}
+
 	//#endregion
 
 	//#region comparison

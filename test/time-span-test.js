@@ -245,9 +245,9 @@ describe("TimeSpan comparison", function () {
 });
 describe("TimeSpan formatting", function () {
     it("with default  pattern.", function () {
-        expect(TimeSpan.from(1, 1, 1, 1, 1, false).toString()).to.be.equal("1.01:01:01.1");
-        expect(TimeSpan.from(12, 12, 12, 12, 123, false).toString()).to.be.equal("12.12:12:12.123");
-        expect(TimeSpan.from(1, 1, 1, 1, 1, true).toString()).to.be.equal("-1.01:01:01.1");
+        expect(TimeSpan.from(1, 2, 3, 4, 5, false).toString()).to.be.equal("1.02:03:04.005");
+        expect(TimeSpan.from(11, 22, 33, 44, 123, false).toString()).to.be.equal("11.22:33:44.123");
+        expect(TimeSpan.from(1, 1, 1, 1, 11, true).toString()).to.be.equal("-1.01:01:01.011");
         expect(TimeSpan.from(12, 12, 12, 12, 123, true).toString()).to.be.equal("-12.12:12:12.123");
     });
     it("with manadatory '+' sign.", function () {
@@ -256,8 +256,18 @@ describe("TimeSpan formatting", function () {
         expect(TimeSpan.from(12, 12, 12, 12, 123, true).toString("%+%d.%hh:%mm:%ss.%t")).to.be.equal("-12.12:12:12.123");
     });
     it("with custom pattern.", function () {
-        expect(TimeSpan.from(1, 1, 1, 1, 1, false).toString("%+%d.%h:%m:%s.%t")).to.be.equal("+1.1:1:1.1");
-        expect(TimeSpan.from(1, 1, 1, 1, 789, false).toString("%t")).to.be.equal("789");
+        expect(TimeSpan.from(1, 2, 3, 4, 5, false).toString("%%")).to.be.equal("%");
+        expect(TimeSpan.from(1, 2, 3, 4, 5, false).toString("%%%%")).to.be.equal("%%");
+        expect(TimeSpan.from(1, 2, 3, 4, 5, false).toString("%+%d.%h:%m:%s.%t")).to.be.equal("+1.2:3:4.5");
+        expect(TimeSpan.from(1, 2, 3, 4, 789, false).toString("%t")).to.be.equal("789");
+        expect(TimeSpan.from(1, 2, 3, 4, 789, false).toString("%tt")).to.be.equal("789");
+        expect(TimeSpan.from(1, 2, 3, 4, 9, false).toString("%tt")).to.be.equal("009");
+        expect(TimeSpan.from(1, 2, 3, 4, 9, false).toString("%d%hh%mm%ss%tt")).to.be.equal("1020304009");
+    });
+    it("invalide pattern.", function () {
+        expect(function () { return TimeSpan.from(1, 1, 1, 1, 1, false).toString("%"); }).to.throw(Error);
+        expect(function () { return TimeSpan.from(1, 1, 1, 1, 1, false).toString("%t%"); }).to.throw(Error);
+        expect(function () { return TimeSpan.from(1, 1, 1, 1, 1, false).toString("%%%"); }).to.throw(Error);
     });
 });
 //# sourceMappingURL=time-span-test.js.map
