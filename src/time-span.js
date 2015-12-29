@@ -1,15 +1,26 @@
 var millisecond = 1, second = 1000 * millisecond, minute = 60 * second, hour = 60 * minute, day = 24 * hour, week = 7 * day;
 var TimeSpan = (function () {
-    /**
-     * Creates new TimeSpan instance
-     * @param value same as tryParse function
-     */
     function TimeSpan(value) {
         this._ms = 0;
         if (value !== undefined) {
-            this.set(value);
+            this.set.apply(this, arguments);
         }
     }
+    //#region formating
+    TimeSpan.registerFormat = function (name, format) {
+        TimeSpan.formats[name] = format;
+    };
+    TimeSpan.unregisterFormat = function (name) {
+        delete TimeSpan.formats[name];
+    };
+    TimeSpan.getFormat = function (format) {
+        if (typeof format === 'string') {
+            format = TimeSpan.formats[format];
+            throw new Error("TimeSpan: Format name '" + format + "' is not valid.");
+        }
+        return format;
+    };
+    //#endregion  
     //#region properties
     /**
      * Changes current TimeSpan instance
@@ -388,6 +399,7 @@ var TimeSpan = (function () {
         return TimeSpan.moreOrEqual(this, d);
     };
     TimeSpan.zero = new TimeSpan(0);
+    TimeSpan.formats = {};
     TimeSpan.formatters = {
         '%': function () { return '%'; },
         '-': function () { return this.isNegative ? "-" : ""; },
@@ -405,5 +417,7 @@ var TimeSpan = (function () {
     TimeSpan.maxFormatterCmdLength = Object.keys(TimeSpan.formatters).reduce(function (p, c) { return c.length > p ? c.length : p; }, 0);
     return TimeSpan;
 })();
-module.exports = TimeSpan;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = TimeSpan;
+//export =TimeSpan;
 //# sourceMappingURL=time-span.js.map

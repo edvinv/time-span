@@ -1,4 +1,4 @@
-import TimeSpan = require('../src/time-span');
+import TimeSpan from '../src/time-span';
 import chai = require("chai");
 var expect = chai.expect;
 
