@@ -10,11 +10,9 @@ export default class TimeSpan {
      * Creates new TimeSpan instance
      */
     constructor();
-    constructor(value: string);
-    constructor(value: string, format: string | Format);
+    constructor(value: string, format?: string | Format | RegExp);
     constructor(value: TimeSpan);
     constructor(ms: number);
-    constructor(hours: number, minutes: number, seconds: number);
     constructor(hours: number, minutes: number, seconds: number);
     constructor(days: number, hours: number, minutes: number, seconds: number);
     constructor(days: number, hours: number, minutes: number, seconds: number, ms: number);
@@ -25,7 +23,13 @@ export default class TimeSpan {
      * Changes current TimeSpan instance
      * @param value same as tryParse function
      */
-    set(value?: number | string | TimeSpan): TimeSpan;
+    set(): TimeSpan;
+    set(value: string, format?: string | Format | RegExp): TimeSpan;
+    set(value: TimeSpan): TimeSpan;
+    set(ms: number): TimeSpan;
+    set(hours: number, minutes: number, seconds: number): TimeSpan;
+    set(days: number, hours: number, minutes: number, seconds: number): TimeSpan;
+    set(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
     milliseconds: number;
     seconds: number;
     minutes: number;
@@ -58,44 +62,21 @@ export default class TimeSpan {
         * Parse value and return new TimeSpan instance or throws error if value is invalid.
         * @param value same as tryParse function
         */
-    static parse(value: number | string | TimeSpan): TimeSpan;
-    /**
-        * Parse value and return total number of miliseconds or throws error if value is invalid.
-        * @param value same as tryParse function
-        */
-    static parseToMs(value: number | string | TimeSpan): number;
-    /**
-    * Parse value and return new TimeSpan instance or null if value is invalid.
-    * @param value
-    * 	 - if value is undefined or null, return zero duration
-    * 	 - if value is instance of Duration return new TimeSpan instance with same duration
-    * 	 - if value is number, value is treated as milliseconds
-    * 	 - otherwise following pattern is used:	([+-][days.][hh:]mm:ss[.milliseconds])|(totalMiliseconds)
-    */
-    static tryParse(value: number | string | TimeSpan): TimeSpan;
-    /**
-        * Parse value and return total number of miliseconds or null is value is invalid
-        * @param value same as tryParse function
-        */
-    static tryParseToMs(value: number | string | TimeSpan): number;
-    private static leadingZeros(n, count);
-    private static formatters;
-    private static maxFormatterCmdLength;
-    /**
-         * format string specification:
-         * %- sign ('-' if negative, '' if positive)
-         * %+ sign ('-' if negative, '+' if positive)
-         * %d days without leading 0
-         * %hh hours with leading 0
-         * %h hours without leading 0
-         * %mm minutes with leading 0
-         * %m minutes without leading 0
-         * %ss hours with leading 0
-         * %s hours without leading 0
-         * %t miliseconds with leading 0
-         * %tt miliseconds without leading 0
-         */
-    toString(format?: string): string;
+    static parse(): TimeSpan;
+    static parse(value: string, format?: string | Format | RegExp): TimeSpan;
+    static parse(value: TimeSpan): TimeSpan;
+    static parse(ms: number): TimeSpan;
+    static parse(hours: number, minutes: number, seconds: number): TimeSpan;
+    static parse(days: number, hours: number, minutes: number, seconds: number): TimeSpan;
+    static parse(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
+    static tryParse(): TimeSpan;
+    static tryParse(value: string, format?: string | Format | RegExp): TimeSpan;
+    static tryParse(value: TimeSpan): TimeSpan;
+    static tryParse(ms: number): TimeSpan;
+    static tryParse(hours: number, minutes: number, seconds: number): TimeSpan;
+    static tryParse(days: number, hours: number, minutes: number, seconds: number): TimeSpan;
+    static tryParse(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
+    toString(f?: Format | string): string;
     static compare(d1: TimeSpan, d2: TimeSpan): number;
     static equal(d1: TimeSpan, d2: TimeSpan): boolean;
     static less(d1: TimeSpan, d2: TimeSpan): boolean;

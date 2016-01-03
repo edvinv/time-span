@@ -7,7 +7,7 @@ var millisecond = 1,
 
 export interface Format {
   parse: ((val: string) => TimeSpan) | RegExp;
-  toString: (timespan: TimeSpan) => string | string;
+  format: (timespan: TimeSpan) => string | string;
 }
 
 export default class TimeSpan {
@@ -19,15 +19,13 @@ export default class TimeSpan {
 	/**
 	 * Creates new TimeSpan instance
 	 */
-  constructor()
-  constructor(value: string)
-  constructor(value: string, format: string | Format)
-  constructor(value: TimeSpan)
-  constructor(ms: number)
-  constructor(hours: number, minutes: number, seconds: number)
-  constructor(hours: number, minutes: number, seconds: number)
-  constructor(days: number, hours: number, minutes: number, seconds: number)
-  constructor(days: number, hours: number, minutes: number, seconds: number, ms: number)
+  constructor();
+  constructor(value: string, format?: string | Format | RegExp);
+  constructor(value: TimeSpan);
+  constructor(ms: number);
+  constructor(hours: number, minutes: number, seconds: number);
+  constructor(days: number, hours: number, minutes: number, seconds: number);
+  constructor(days: number, hours: number, minutes: number, seconds: number, ms: number);
   constructor(value?: any) {
     if (value !== undefined) {
       this.set.apply(this, arguments);
@@ -58,8 +56,18 @@ export default class TimeSpan {
 	 * Changes current TimeSpan instance 
 	 * @param value same as tryParse function 
 	 */
-  set(value?: number | string | TimeSpan): TimeSpan {
-    var ms = TimeSpan.parseToMs(value);
+  set(): TimeSpan;
+  set(value: string, format?: string | Format | RegExp): TimeSpan;
+  set(value: TimeSpan): TimeSpan;
+  set(ms: number): TimeSpan;
+  set(hours: number, minutes: number, seconds: number): TimeSpan;
+  set(days: number, hours: number, minutes: number, seconds: number): TimeSpan;
+  set(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
+  set(value?: any): TimeSpan {
+    var ms = tryParseToMs(value);
+    if (ms === null) {
+      throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
+    }
     this.totalMilliseconds = ms;
     return this;
   }
@@ -212,7 +220,14 @@ export default class TimeSpan {
 		* Parse value and return new TimeSpan instance or throws error if value is invalid.
 		* @param value same as tryParse function 
 		*/
-  static parse(value: number | string | TimeSpan): TimeSpan {
+  static parse(): TimeSpan
+  static parse(value: string, format?: string | Format | RegExp): TimeSpan
+  static parse(value: TimeSpan): TimeSpan
+  static parse(ms: number): TimeSpan
+  static parse(hours: number, minutes: number, seconds: number): TimeSpan
+  static parse(days: number, hours: number, minutes: number, seconds: number): TimeSpan
+  static parse(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
+  static parse(value?: any, p1?: any, p2?: number, p3?: number, p4?: number): TimeSpan {
     var ts = TimeSpan.tryParse(value);
     if (!ts) {
       throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
@@ -220,152 +235,27 @@ export default class TimeSpan {
     return ts;
   }
 
-	/**
-		* Parse value and return total number of miliseconds or throws error if value is invalid.
-		* @param value same as tryParse function 
-		*/
-  static parseToMs(value: number | string | TimeSpan): number {
-    var ms = TimeSpan.tryParseToMs(value);
-    if (ms === null) {
-      throw Error("Invalide duration value: '" + value + "'. Valid format is '[+-][days.]hh:mm:ss[.milliseconds]'.");
-    }
-    return ms;
-  }
-
-	/**
-	* Parse value and return new TimeSpan instance or null if value is invalid.
-	* @param value
-	* 	 - if value is undefined or null, return zero duration 
-	* 	 - if value is instance of Duration return new TimeSpan instance with same duration
-	* 	 - if value is number, value is treated as milliseconds
-	* 	 - otherwise following pattern is used:	([+-][days.][hh:]mm:ss[.milliseconds])|(totalMiliseconds)
-	*/
-  static tryParse(value: number | string | TimeSpan): TimeSpan {
-    var ms = TimeSpan.tryParseToMs(value);
+  static tryParse(): TimeSpan
+  static tryParse(value: string, format?: string | Format | RegExp): TimeSpan
+  static tryParse(value: TimeSpan): TimeSpan
+  static tryParse(ms: number): TimeSpan
+  static tryParse(hours: number, minutes: number, seconds: number): TimeSpan
+  static tryParse(days: number, hours: number, minutes: number, seconds: number): TimeSpan
+  static tryParse(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
+  static tryParse(value?: any, p1?: any, p2?: number, p3?: number, p4?: number): TimeSpan {
+    var ms = tryParseToMs(value);
     return ms === null ? null : new TimeSpan(ms);
   }
 	
-	/**
-		* Parse value and return total number of miliseconds or null is value is invalid
-		* @param value same as tryParse function 
-		*/
-  static tryParseToMs(value: number | string | TimeSpan): number {
-    // if value is undefined or null return zero duration
-    if (value == null) {
-      return 0;
-    }
-		
-    // if value is already TimeSpan instance return new TimeSpan instance
-    if (value instanceof TimeSpan) {
-      return value.totalMilliseconds;
-    }
-
-    // if value is number then this are miliseconds
-    if (typeof value === "number") {
-      return value;
-    }
-
-    if (typeof value === "string") {
-      var durationRegex = /^((([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?)|([+-]?\d+))$/g;
-      var res = durationRegex.exec(value);
-      if (!res) {
-        return null;
-      }
-
-      if (res[14]) {
-        // string represent total milliseconds
-        return parseInt(res[14], 10);
-      }
-      return (
-        (res[5] !== undefined ? day * parseInt(res[5], 10) : 0) +
-        (res[8] !== undefined ? hour * parseInt(res[8], 10) : 0) +
-        minute * parseInt(res[9], 10) +
-        second * parseInt(res[10], 10) +
-        (res[13] !== undefined ? parseInt(res[13], 10) : 0)
-      ) * (res[3] === '-' ? -1 : 1);
-    }
-    return null;
-  }
   //#endregion
 
   //#region formating
-  private static leadingZeros(n: number, count: number): string {
-    var r = n.toString();
-    while (r.length < count) {
-      r = "0" + r;
-    }
-    return r;
+  // "%-%d.%hh:%mm:%ss.%tt"
+  toString(f?: Format | string): string {
+    return format(this, f);
   }
-  private static formatters = {
-    '%': function() { return '%'; },
-    '-': function() { return this.isNegative ? "-" : ""; },
-    '+': function() { return this.isNegative ? "-" : "+"; },
-    'd': function() { return this.days.toString(); },
-    'h': function() { return this.hours.toString(); },
-    'hh': function() { return TimeSpan.leadingZeros(this.hours, 2); },
-    'm': function() { return this.minutes.toString(); },
-    'mm': function() { return TimeSpan.leadingZeros(this.minutes, 2); },
-    's': function() { return this.seconds.toString(); },
-    'ss': function() { return TimeSpan.leadingZeros(this.seconds, 2); },
-    't': function() { return this.milliseconds.toString(); },
-    'tt': function() { return TimeSpan.leadingZeros(this.milliseconds, 3); }
-  };
-  private static maxFormatterCmdLength: number = Object.keys(TimeSpan.formatters).reduce((p, c) => c.length > p ? c.length : p, 0);
-	/**
-		 * format string specification:
-		 * %- sign ('-' if negative, '' if positive)
-		 * %+ sign ('-' if negative, '+' if positive)
-		 * %d days without leading 0
-		 * %hh hours with leading 0
-		 * %h hours without leading 0
-		 * %mm minutes with leading 0
-		 * %m minutes without leading 0
-		 * %ss seconds with leading 0
-		 * %s seconds without leading 0
-		 * %t miliseconds with leading 0
-		 * %tt miliseconds without leading 0
-		 */
-
-  toString(format: string = "%-%d.%hh:%mm:%ss.%tt"): string {
-    var res = "",
-      cmd: any = null,
-      maxCmdLength = TimeSpan.maxFormatterCmdLength,
-      i: number,
-      ic: number,
-      fl = format.length,
-      curr: string = null,
-      formatter: () => string;
-
-    for (i = 0; i < fl; ++i) {
-      if (cmd) {
-        for (ic = maxCmdLength; ic > 0; --ic) {
-          cmd = format.slice(i, i + ic);
-          formatter = TimeSpan.formatters[cmd];
-          if (formatter) {
-            break;
-          }
-        }
-        if (formatter) {
-          i += cmd.length - 1;
-          res += formatter.apply(this);
-          cmd = false;
-        } else {
-          throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
-        }
-      } else {
-        curr = format[i];
-        if (curr === '%') {
-          cmd = true;
-        }
-        else {
-          res += curr;
-        }
-      }
-    }
-    if (cmd) {
-      throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
-    }
-    return res;
+  format(f?: Format | string): string {
+    return format(this, f);
   }
 
   //#endregion
@@ -419,6 +309,146 @@ export default class TimeSpan {
   }
 
   //#endregion
+}
+
+/**
+ * Return duration in milliseconds based on different input parameters or null when parsing fails
+ */
+
+function tryParseToMs(): number;
+function tryParseToMs(value: string, format?: string | Format | RegExp): number;
+function tryParseToMs(value: TimeSpan): number;
+function tryParseToMs(ms: number): number;
+function tryParseToMs(hours: number, minutes: number, seconds: number): number;
+function tryParseToMs(days: number, hours: number, minutes: number, seconds: number): number;
+function tryParseToMs(days: number, hours: number, minutes: number, seconds: number, ms: number): number;
+function tryParseToMs(value?: any, p1?: any, p2?: number, p3?: number, p4?: number): number {
+  // if value is undefined or null return zero duration
+  if (value == null) {
+    return 0;
+  }
+
+  if (typeof (value) === 'string') {
+    return tryParseText(value, p1);
+  }	
+    
+  // if value is already TimeSpan instance return totalMilliseconds of that value
+  if (value instanceof TimeSpan) {
+    return value.totalMilliseconds;
+  }
+
+  if (typeof (value) === 'number' && typeof (p1) === 'number' && typeof (p2) === 'number') {
+    if (p3 === undefined) {
+      return value * hour + p1 * minute + p2 * second;
+    } else if (typeof (p2) === 'number') {
+      if (p4 === undefined) {
+        return value * day + p1 * hour + p2 * minute + p3 * second;
+      } else if (typeof (p3) === 'number') {
+        return value * day + p1 * hour + p2 * minute + p3 * second + p4;
+      }
+    }
+  }
+  throw new TypeError("Invalide arguments for parse method");
+}
+
+function tryParseText(value: string, format: string | Format | RegExp): number {
+  var durationRegex = /^((([\-\+])?((\d+)(\.))?(([01]?\d|2[0123]):)?([012345]?\d):([012345]?\d)((\.)(\d{1,3}))?)|([+-]?\d+))$/g;
+  var res = durationRegex.exec(value);
+  if (!res) {
+    return null;
+  }
+
+  if (res[14]) {
+    // string represent total milliseconds
+    return parseInt(res[14], 10);
+  }
+  return (
+    (res[5] !== undefined ? day * parseInt(res[5], 10) : 0) +
+    (res[8] !== undefined ? hour * parseInt(res[8], 10) : 0) +
+    minute * parseInt(res[9], 10) +
+    second * parseInt(res[10], 10) +
+    (res[13] !== undefined ? parseInt(res[13], 10) : 0)
+  ) * (res[3] === '-' ? -1 : 1);
+}
+
+
+function leadingZeros(n: number, count: number): string {
+  var r = n.toString();
+  while (r.length < count) {
+    r = "0" + r;
+  }
+  return r;
+}
+var formatters = {
+  '%': function() { return '%'; },
+  '-': function() { return this.isNegative ? "-" : ""; },
+  '+': function() { return this.isNegative ? "-" : "+"; },
+  'd': function() { return this.days.toString(); },
+  'h': function() { return this.hours.toString(); },
+  'hh': function() { return leadingZeros(this.hours, 2); },
+  'm': function() { return this.minutes.toString(); },
+  'mm': function() { return leadingZeros(this.minutes, 2); },
+  's': function() { return this.seconds.toString(); },
+  'ss': function() { return leadingZeros(this.seconds, 2); },
+  't': function() { return this.milliseconds.toString(); },
+  'tt': function() { return leadingZeros(this.milliseconds, 3); }
+};
+var maxFormatterCmdLength: number = Object.keys(formatters).reduce((p, c) => c.length > p ? c.length : p, 0);
+/**
+   * format string specification:
+   * %- sign ('-' if negative, '' if positive)
+   * %+ sign ('-' if negative, '+' if positive)
+   * %d days without leading 0
+   * %hh hours with leading 0
+   * %h hours without leading 0
+   * %mm minutes with leading 0
+   * %m minutes without leading 0
+   * %ss seconds with leading 0
+   * %s seconds without leading 0
+   * %t miliseconds with leading 0
+   * %tt miliseconds without leading 0
+   */
+
+function format(ts: TimeSpan, format?: Format | string) {
+  var res = "",
+    cmd: any = null,
+    maxCmdLength = maxFormatterCmdLength,
+    i: number,
+    ic: number,
+    fl = format.length,
+    curr: string = null,
+    formatter: () => string;
+
+  for (i = 0; i < fl; ++i) {
+    if (cmd) {
+      for (ic = maxCmdLength; ic > 0; --ic) {
+        cmd = format.slice(i, i + ic);
+        formatter = formatters[cmd];
+        if (formatter) {
+          break;
+        }
+      }
+      if (formatter) {
+        i += cmd.length - 1;
+        res += formatter.apply(this);
+        cmd = false;
+      } else {
+        throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+      }
+    } else {
+      curr = format[i];
+      if (curr === '%') {
+        cmd = true;
+      }
+      else {
+        res += curr;
+      }
+    }
+  }
+  if (cmd) {
+    throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+  }
+  return res;
 }
 
 //export =TimeSpan;
