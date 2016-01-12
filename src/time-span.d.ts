@@ -1,6 +1,6 @@
 export interface Format {
     parse: ((val: string) => TimeSpan) | RegExp;
-    toString: (timespan: TimeSpan) => string | string;
+    format: (timespan: TimeSpan) => string | string;
 }
 export default class TimeSpan {
     private _ms;
@@ -77,6 +77,7 @@ export default class TimeSpan {
     static tryParse(days: number, hours: number, minutes: number, seconds: number): TimeSpan;
     static tryParse(days: number, hours: number, minutes: number, seconds: number, ms: number): TimeSpan;
     toString(f?: Format | string): string;
+    format(f?: Format | string): string;
     static compare(d1: TimeSpan, d2: TimeSpan): number;
     static equal(d1: TimeSpan, d2: TimeSpan): boolean;
     static less(d1: TimeSpan, d2: TimeSpan): boolean;

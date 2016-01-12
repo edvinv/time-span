@@ -223,6 +223,9 @@ var TimeSpan = (function () {
     TimeSpan.prototype.toString = function (f) {
         return format(this, f);
     };
+    TimeSpan.prototype.format = function (f) {
+        return format(this, f);
+    };
     //#endregion
     //#region comparison
     TimeSpan.compare = function (d1, d2) {
@@ -368,39 +371,46 @@ var maxFormatterCmdLength = Object.keys(formatters).reduce(function (p, c) { ret
    * %tt miliseconds without leading 0
    */
 function format(ts, format) {
-    var res = "", cmd = null, maxCmdLength = maxFormatterCmdLength, i, ic, fl = format.length, curr = null, formatter;
+    /*var res = "",
+      cmd: any = null,
+      maxCmdLength = maxFormatterCmdLength,
+      i: number,
+      ic: number,
+      fl = format.length,
+      curr: string = null,
+      formatter: () => string;
+  
     for (i = 0; i < fl; ++i) {
-        if (cmd) {
-            for (ic = maxCmdLength; ic > 0; --ic) {
-                cmd = format.slice(i, i + ic);
-                formatter = formatters[cmd];
-                if (formatter) {
-                    break;
-                }
-            }
-            if (formatter) {
-                i += cmd.length - 1;
-                res += formatter.apply(this);
-                cmd = false;
-            }
-            else {
-                throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
-            }
+      if (cmd) {
+        for (ic = maxCmdLength; ic > 0; --ic) {
+          cmd = format.slice(i, i + ic);
+          formatter = formatters[cmd];
+          if (formatter) {
+            break;
+          }
+        }
+        if (formatter) {
+          i += cmd.length - 1;
+          res += formatter.apply(this);
+          cmd = false;
+        } else {
+          throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+        }
+      } else {
+        curr = format[i];
+        if (curr === '%') {
+          cmd = true;
         }
         else {
-            curr = format[i];
-            if (curr === '%') {
-                cmd = true;
-            }
-            else {
-                res += curr;
-            }
+          res += curr;
         }
+      }
     }
     if (cmd) {
-        throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
+      throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
     }
-    return res;
+    return res;*/
+    return "";
 }
 //export =TimeSpan;
 //# sourceMappingURL=time-span.js.map

@@ -410,7 +410,7 @@ var maxFormatterCmdLength: number = Object.keys(formatters).reduce((p, c) => c.l
    */
 
 function format(ts: TimeSpan, format?: Format | string) {
-  var res = "",
+  /*var res = "",
     cmd: any = null,
     maxCmdLength = maxFormatterCmdLength,
     i: number,
@@ -448,7 +448,8 @@ function format(ts: TimeSpan, format?: Format | string) {
   if (cmd) {
     throw new Error("TimeSpan: Invalide format expression :'" + format + "'.");
   }
-  return res;
+  return res;*/
+  return "";
 }
 
 //export =TimeSpan;
